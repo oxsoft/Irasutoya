@@ -1,9 +1,6 @@
 .gradle
 /local.properties
 .idea/
-.DS_Store
 /build
 /captures
 *.iml
-app/google-services.json
-app/src/main/assets/license.txt
