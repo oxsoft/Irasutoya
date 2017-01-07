@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,11 +51,14 @@ public class MainService extends InputMethodService {
         void call();
     }
 
+    private OrmaDatabase orma;
     private CompositeDisposable subscriptions = new CompositeDisposable();
     private Action0 removeOnPreDrawListener = null;
 
     @Override
     public View onCreateInputView() {
+        orma = OrmaDatabase.builder(this).build();
+
         View inputView = getLayoutInflater().inflate(R.layout.view_keyboard, null);
         TextView search = (TextView) inputView.findViewById(R.id.search);
         search.setOnClickListener(v -> Toast.makeText(this, R.string.todo, Toast.LENGTH_SHORT).show());
@@ -75,12 +79,12 @@ public class MainService extends InputMethodService {
                         labels.getChildAt(i).setBackgroundColor(Color.TRANSPARENT);
                     }
                     textView.setBackgroundResource(R.drawable.label_background);
-                    Single<SearchResult> request = searchQuery.getType() == SearchQuery.TYPE_LATEST ? searchLatest() : searchLabel(searchQuery.getName());
+                    Single<SearchResult> request = searchQuery.getType() == SearchQuery.TYPE_HISTORY ? searchHistory() : searchQuery.getType() == SearchQuery.TYPE_LATEST ? searchLatest() : searchLabel(searchQuery.getName());
                     subscriptions.add(request.subscribe(searchResult -> drawImages(contents, searchResult), Throwable::printStackTrace));
                 });
                 labels.addView(textView);
             }
-            labels.getChildAt(0).performClick();
+            labels.getChildAt(orma.selectFromImageCache().count() > 0 ? 0 : 1).performClick();
         }, Throwable::printStackTrace);
         return inputView;
     }
@@ -120,7 +124,11 @@ public class MainService extends InputMethodService {
             contents.addView(imageView);
             subscriptions.add(download(image.getUrl()).subscribe(uri -> {
                 Glide.with(this).load(uri).into(imageView);
-                imageView.setOnClickListener(v -> commitPngImage(uri, image.getDescription(), Uri.parse(image.getUrl())));
+                imageView.setOnClickListener(v -> {
+                    commitPngImage(uri, image.getDescription(), Uri.parse(image.getUrl()));
+                    Single.fromCallable(() -> orma.insertIntoImageCache(new ImageCache(image.getUrl(), image.getDescription()))).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(id -> {
+                    }, Throwable::printStackTrace);
+                });
             }, Throwable::printStackTrace));
         }
         if (!TextUtils.isEmpty(searchResult.getNext())) {
@@ -170,10 +178,11 @@ public class MainService extends InputMethodService {
 
     private Single<SearchQuery[]> getSearchQueries() {
         return fetchLabels().map(labels -> {
-            SearchQuery[] searchQueries = new SearchQuery[labels.length + 1];
-            searchQueries[0] = new SearchQuery(SearchQuery.TYPE_LATEST, "新着");
+            SearchQuery[] searchQueries = new SearchQuery[labels.length + 2];
+            searchQueries[0] = new SearchQuery(SearchQuery.TYPE_HISTORY, "履歴");
+            searchQueries[1] = new SearchQuery(SearchQuery.TYPE_LATEST, "新着");
             for (int i = 0; i < labels.length; i++) {
-                searchQueries[i + 1] = new SearchQuery(SearchQuery.TYPE_LABEL, labels[i]);
+                searchQueries[i + 2] = new SearchQuery(SearchQuery.TYPE_LABEL, labels[i]);
             }
             return searchQueries;
         });
@@ -198,6 +207,16 @@ public class MainService extends InputMethodService {
 
     private Single<SearchResult> searchQuery(@NonNull String query) {
         return search("http://www.irasutoya.com/search?q=" + query);
+    }
+
+    private Single<SearchResult> searchHistory() {
+        return orma.selectFromImageCache().executeAsObservable().reduce(new ArrayList<SearchResult.Image>(), (imageList, imageCache) -> {
+            imageList.add(new SearchResult.Image(imageCache.url, imageCache.description));
+            return imageList;
+        }).map(imageList -> {
+            SearchResult.Image[] images = imageList.toArray(new SearchResult.Image[imageList.size()]);
+            return new SearchResult(images, null);
+        });
     }
 
     private Single<SearchResult> searchLatest() {

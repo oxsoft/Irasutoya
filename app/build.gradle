@@ -43,6 +43,8 @@ dependencies {
     compile 'org.jsoup:jsoup:1.10.2'
     compile 'com.google.code.gson:gson:2.8.0'
     provided 'org.projectlombok:lombok:1.16.12'
+    annotationProcessor 'com.github.gfx.android.orma:orma-processor:4.1.0'
+    compile 'com.github.gfx.android.orma:orma:4.1.0'
     testCompile 'junit:junit:4.12'
 }
 
