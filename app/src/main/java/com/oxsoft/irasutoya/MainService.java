@@ -2,13 +2,16 @@ package com.oxsoft.irasutoya;
 
 import android.content.ClipDescription;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.inputmethodservice.InputMethodService;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v13.view.inputmethod.EditorInfoCompat;
 import android.support.v13.view.inputmethod.InputConnectionCompat;
 import android.support.v13.view.inputmethod.InputContentInfoCompat;
+import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.HorizontalScrollView;
@@ -36,9 +39,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 import rx.Single;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
 import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 public class MainService extends InputMethodService {
+    private CompositeSubscription subscriptions = new CompositeSubscription();
+    private Action0 removeOnPreDrawListener = null;
 
     @Override
     public View onCreateInputView() {
@@ -57,27 +64,16 @@ public class MainService extends InputMethodService {
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                 lp.rightMargin = dp2px(8);
                 textView.setLayoutParams(lp);
-                textView.setOnClickListener(v0 -> {
+                textView.setOnClickListener(v -> {
+                    if (removeOnPreDrawListener != null) removeOnPreDrawListener.call();
+                    subscriptions.clear();
                     contents.removeAllViews();
                     contentsScrollView.post(() -> contentsScrollView.scrollTo(0, 0));
                     for (int i = 0; i < labels.getChildCount(); i++) {
                         labels.getChildAt(i).setBackgroundColor(Color.TRANSPARENT);
                     }
                     textView.setBackgroundResource(R.drawable.label_background);
-                    searchLabel(label).subscribe(searchResult -> {
-                        for (SearchResult.Image image : searchResult.getImages()) {
-                            ImageView imageView = new ImageView(this);
-                            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(dp2px(120), dp2px(120));
-                            layoutParams.rightMargin = dp2px(8);
-                            imageView.setLayoutParams(layoutParams);
-                            imageView.setBackgroundColor(Color.WHITE);
-                            contents.addView(imageView);
-                            download(image.getUrl()).subscribe(uri -> {
-                                Glide.with(this).load(uri).into(imageView);
-                                imageView.setOnClickListener(v1 -> commitPngImage(uri, image.getDescription(), Uri.parse(image.getUrl())));
-                            }, Throwable::printStackTrace);
-                        }
-                    }, Throwable::printStackTrace);
+                    subscriptions.add(searchLabel(label).subscribe(searchResult -> drawImages(contents, searchResult), Throwable::printStackTrace));
                 });
                 labels.addView(textView);
             }
@@ -115,6 +111,32 @@ public class MainService extends InputMethodService {
         InputConnectionCompat.commitContent(inputConnection, editorInfo, inputContentInfo, flags, null);
     }
 
+    private void drawImages(LinearLayout contents, SearchResult searchResult) {
+        for (SearchResult.Image image : searchResult.getImages()) {
+            ImageView imageView = (ImageView) getLayoutInflater().inflate(R.layout.view_item_image, contents, false);
+            contents.addView(imageView);
+            subscriptions.add(download(image.getUrl()).subscribe(uri -> {
+                Glide.with(this).load(uri).into(imageView);
+                imageView.setOnClickListener(v -> commitPngImage(uri, image.getDescription(), Uri.parse(image.getUrl())));
+            }, Throwable::printStackTrace));
+        }
+        if (!TextUtils.isEmpty(searchResult.getNext())) {
+            View lastImage = contents.getChildAt(contents.getChildCount() - 1);
+            Rect rect = new Rect();
+            ViewTreeObserver.OnPreDrawListener onPreDrawListener = () -> {
+                if (lastImage.getLocalVisibleRect(rect)) {
+                    if (removeOnPreDrawListener != null) removeOnPreDrawListener.call();
+                    subscriptions.add(search(searchResult.getNext()).subscribe(nextSearchResult -> drawImages(contents, nextSearchResult), Throwable::printStackTrace));
+                }
+                return true;
+            };
+            removeOnPreDrawListener = () -> {
+                lastImage.getViewTreeObserver().removeOnPreDrawListener(onPreDrawListener);
+                removeOnPreDrawListener = null;
+            };
+            lastImage.getViewTreeObserver().addOnPreDrawListener(onPreDrawListener);
+        }
+    }
 
     private Single<Uri> download(String url) {
         String[] segment = url.split("/");
@@ -126,9 +148,8 @@ public class MainService extends InputMethodService {
         }
         return Single.create((Single.OnSubscribe<Uri>) singleSubscriber -> {
             try {
-                OkHttpClient client = new OkHttpClient();
                 Request request = new Request.Builder().url(url).build();
-                Response response = client.newCall(request).execute();
+                Response response = new OkHttpClient().newCall(request).execute();
                 InputStream input = response.body().byteStream();
                 OutputStream output = openFileOutput(fileName, MODE_PRIVATE);
                 byte[] buffer = new byte[16777216];
@@ -172,7 +193,9 @@ public class MainService extends InputMethodService {
     private Single<SearchResult> search(@NonNull String url) {
         return Single.create((Single.OnSubscribe<SearchResult>) singleSubscriber -> {
             try {
-                Document document = Jsoup.connect(url).get();
+                Request request = new Request.Builder().url(url).build();
+                String body = new OkHttpClient().newCall(request).execute().body().string();
+                Document document = Jsoup.parse(body);
                 Elements boxim = document.getElementsByClass("boxim");
                 SearchResult.Image[] images = new SearchResult.Image[boxim.size()];
                 for (int i = 0; i < images.length; i++) {
@@ -187,7 +210,7 @@ public class MainService extends InputMethodService {
                 Element nextLink = document.getElementById("Blog1_blog-pager-older-link");
                 String next = nextLink != null ? nextLink.attr("href") : null;
                 singleSubscriber.onSuccess(new SearchResult(images, next));
-            } catch (Exception e) {
+            } catch (IOException e) {
                 singleSubscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());

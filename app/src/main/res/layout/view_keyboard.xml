@@ -12,7 +12,6 @@
         android:background="#ddd"
         android:drawableLeft="@android:drawable/ic_menu_search"
         android:drawablePadding="8dp"
-        android:drawableStart="@android:drawable/ic_menu_search"
         android:gravity="center_vertical"
         android:hint="@string/search_hint"
         android:padding="8dp"
