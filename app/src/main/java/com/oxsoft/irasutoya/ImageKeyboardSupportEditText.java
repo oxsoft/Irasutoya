@@ -14,7 +14,8 @@ import rx.Observable;
 import rx.subjects.BehaviorSubject;
 
 public class ImageKeyboardSupportEditText extends EditText {
-    private BehaviorSubject<Uri> uri = BehaviorSubject.create();
+    private BehaviorSubject<Uri> contentUri = BehaviorSubject.create();
+    private BehaviorSubject<CharSequence> description = BehaviorSubject.create();
 
     public ImageKeyboardSupportEditText(Context context) {
         super(context);
@@ -40,13 +41,18 @@ public class ImageKeyboardSupportEditText extends EditText {
                     return false;
                 }
             }
-            uri.onNext(inputContentInfo.getContentUri());
+            contentUri.onNext(inputContentInfo.getContentUri());
+            description.onNext(inputContentInfo.getDescription().getLabel());
             inputContentInfo.releasePermission();
             return true;
         });
     }
 
-    public Observable<Uri> getUri() {
-        return uri.asObservable();
+    public Observable<Uri> getContentUri() {
+        return contentUri.asObservable();
+    }
+
+    public Observable<CharSequence> getDescription() {
+        return description.asObservable();
     }
 }
