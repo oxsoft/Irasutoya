@@ -46,6 +46,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.view.View.GONE;
+
 public class MainService extends InputMethodService {
     private static final int IMAGE_SIZE = 400;
     private static final long VIBRATION_TIME = 10L;
@@ -56,6 +58,7 @@ public class MainService extends InputMethodService {
 
     private OrmaDatabase orma;
     private Vibrator vibrator;
+    private TextView unsupported;
     private CompositeDisposable subscriptions = new CompositeDisposable();
     private Action0 removeOnPreDrawListener = null;
 
@@ -66,10 +69,14 @@ public class MainService extends InputMethodService {
 
         View inputView = getLayoutInflater().inflate(R.layout.view_keyboard, null);
         TextView search = (TextView) inputView.findViewById(R.id.search);
-        search.setOnClickListener(v -> Toast.makeText(this, R.string.todo, Toast.LENGTH_SHORT).show());
+        search.setOnClickListener(v -> {
+            vibrator.vibrate(VIBRATION_TIME);
+            Toast.makeText(this, R.string.todo, Toast.LENGTH_SHORT).show();
+        });
         HorizontalScrollView contentsScrollView = (HorizontalScrollView) inputView.findViewById(R.id.view_keyboard_contents_scroll_view);
         LinearLayout contents = (LinearLayout) inputView.findViewById(R.id.view_keyboard_contents);
         LinearLayout labels = (LinearLayout) inputView.findViewById(R.id.view_keyboard_labels);
+        unsupported = (TextView) inputView.findViewById(R.id.unsupported);
 
         getSearchQueries().subscribe(searchQueries -> {
             for (SearchQuery searchQuery : searchQueries) {
@@ -101,20 +108,16 @@ public class MainService extends InputMethodService {
 
         boolean pngSupported = false;
         for (String mimeType : mimeTypes) {
-            if (ClipDescription.compareMimeTypes(mimeType, "image/png")) {
+            if (ClipDescription.compareMimeTypes(mimeType, MimeTypes.PNG)) {
                 pngSupported = true;
             }
         }
 
-        if (pngSupported) {
-            // the target editor supports GIFs. enable corresponding content
-        } else {
-            // the target editor does not support GIFs. disable corresponding content
-        }
+        unsupported.setVisibility(pngSupported ? GONE : View.VISIBLE);
     }
 
     private void commitPngImage(Uri contentUri, String imageDescription, Uri linkUri) {
-        InputContentInfoCompat inputContentInfo = new InputContentInfoCompat(contentUri, new ClipDescription(imageDescription, new String[]{"image/png"}), linkUri);
+        InputContentInfoCompat inputContentInfo = new InputContentInfoCompat(contentUri, new ClipDescription(imageDescription, new String[]{MimeTypes.PNG}), linkUri);
         InputConnection inputConnection = getCurrentInputConnection();
         EditorInfo editorInfo = getCurrentInputEditorInfo();
         int flags = 0;
@@ -197,8 +200,8 @@ public class MainService extends InputMethodService {
     private Single<SearchQuery[]> getSearchQueries() {
         return fetchLabels().map(labels -> {
             SearchQuery[] searchQueries = new SearchQuery[labels.length + 2];
-            searchQueries[0] = new SearchQuery(SearchQuery.TYPE_HISTORY, "履歴");
-            searchQueries[1] = new SearchQuery(SearchQuery.TYPE_LATEST, "新着");
+            searchQueries[0] = new SearchQuery(SearchQuery.TYPE_HISTORY, getString(R.string.history));
+            searchQueries[1] = new SearchQuery(SearchQuery.TYPE_LATEST, getString(R.string.latest));
             for (int i = 0; i < labels.length; i++) {
                 searchQueries[i + 2] = new SearchQuery(SearchQuery.TYPE_LABEL, labels[i]);
             }
@@ -223,6 +226,7 @@ public class MainService extends InputMethodService {
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
+    @SuppressWarnings("unused")
     private Single<SearchResult> searchQuery(@NonNull String query) {
         return search("http://www.irasutoya.com/search?q=" + query);
     }

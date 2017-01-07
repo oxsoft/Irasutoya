@@ -1,48 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="#eee"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#eee"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ddd"
+            android:drawableLeft="@android:drawable/ic_menu_search"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:hint="@string/search_hint"
+            android:padding="8dp"
+            android:textSize="16sp" />
+
+        <HorizontalScrollView
+            android:id="@+id/view_keyboard_contents_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/view_keyboard_contents"
+                android:layout_width="wrap_content"
+                android:layout_height="136dp"
+                android:orientation="horizontal"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/view_keyboard_labels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp" />
+        </HorizontalScrollView>
+    </LinearLayout>
 
     <TextView
-        android:id="@+id/search"
+        android:id="@+id/unsupported"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#ddd"
-        android:drawableLeft="@android:drawable/ic_menu_search"
-        android:drawablePadding="8dp"
-        android:gravity="center_vertical"
-        android:hint="@string/search_hint"
-        android:padding="8dp"
-        android:textSize="16sp" />
-
-    <HorizontalScrollView
-        android:id="@+id/view_keyboard_contents_scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/view_keyboard_contents"
-            android:layout_width="wrap_content"
-            android:layout_height="136dp"
-            android:orientation="horizontal"
-            android:padding="8dp" />
-    </HorizontalScrollView>
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/view_keyboard_labels"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingBottom="8dp"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp" />
-    </HorizontalScrollView>
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:background="#efff"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="@string/unsupported"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:visibility="gone" />
+</FrameLayout>

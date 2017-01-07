@@ -25,6 +25,7 @@ android {
         ignore 'ContentDescription'
         ignore 'RtlSymmetry'
         ignore 'RtlHardcoded'
+        ignore 'InflateParams'
     }
 }
 

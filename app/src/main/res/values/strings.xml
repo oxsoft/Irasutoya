@@ -3,4 +3,7 @@
     <string name="label">いらすとやキーボード</string>
     <string name="search_hint">検索</string>
     <string name="todo">実装されてません</string>
+    <string name="history">履歴</string>
+    <string name="latest">新着</string>
+    <string name="unsupported">入力欄が画像に対応していません</string>
 </resources>

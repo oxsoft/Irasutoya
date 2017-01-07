@@ -32,7 +32,7 @@ public class ImageKeyboardSupportEditText extends EditText {
     @Override
     public InputConnection onCreateInputConnection(EditorInfo editorInfo) {
         final InputConnection ic = super.onCreateInputConnection(editorInfo);
-        EditorInfoCompat.setContentMimeTypes(editorInfo, new String[]{"image/png"});
+        EditorInfoCompat.setContentMimeTypes(editorInfo, new String[]{MimeTypes.PNG});
         return InputConnectionCompat.createWrapper(ic, editorInfo, (inputContentInfo, flags, opts) -> {
             if (BuildCompat.isAtLeastNMR1() && (flags & InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0) {
                 try {

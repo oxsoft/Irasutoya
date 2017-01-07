@@ -26,7 +26,7 @@ public class FileContentProvider extends ContentProvider {
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
-        return "image/png";
+        return MimeTypes.PNG;
     }
 
     @Nullable
