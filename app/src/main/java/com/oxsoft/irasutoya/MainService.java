@@ -1,6 +1,7 @@
 package com.oxsoft.irasutoya;
 
 import android.content.ClipDescription;
+import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.inputmethodservice.InputMethodService;
@@ -126,7 +127,14 @@ public class MainService extends InputMethodService {
                 Glide.with(this).load(uri).into(imageView);
                 imageView.setOnClickListener(v -> {
                     commitPngImage(uri, image.getDescription(), Uri.parse(image.getUrl()));
-                    Single.fromCallable(() -> orma.insertIntoImageCache(new ImageCache(image.getUrl(), image.getDescription()))).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(id -> {
+                    Single.fromCallable(() -> {
+                        String key = getFileNameFromUrl(image.getUrl());
+                        try {
+                            return orma.insertIntoImageCache(new ImageCache(key, image.getUrl(), image.getDescription(), System.currentTimeMillis()));
+                        } catch (SQLiteConstraintException e) {
+                            return orma.updateImageCache().url(image.getUrl()).description(image.getDescription()).updated(System.currentTimeMillis()).keyEq(key).execute();
+                        }
+                    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(id -> {
                     }, Throwable::printStackTrace);
                 });
             }, Throwable::printStackTrace));
@@ -149,9 +157,13 @@ public class MainService extends InputMethodService {
         }
     }
 
-    private Single<Uri> download(String url) {
+    private static String getFileNameFromUrl(String url) {
         String[] segment = url.split("/");
-        String fileName = segment[segment.length - 1];
+        return segment[segment.length - 1];
+    }
+
+    private Single<Uri> download(String url) {
+        String fileName = getFileNameFromUrl(url);
         File file = getFileStreamPath(fileName);
         Uri uri = Uri.parse("content://com.oxsoft.irasutoya.FileContentProvider/" + fileName);
         if (file.exists() && file.isFile()) {
@@ -210,7 +222,7 @@ public class MainService extends InputMethodService {
     }
 
     private Single<SearchResult> searchHistory() {
-        return orma.selectFromImageCache().executeAsObservable().reduce(new ArrayList<SearchResult.Image>(), (imageList, imageCache) -> {
+        return orma.selectFromImageCache().orderByUpdatedDesc().limit(20L).executeAsObservable().reduce(new ArrayList<SearchResult.Image>(), (imageList, imageCache) -> {
             imageList.add(new SearchResult.Image(imageCache.url, imageCache.description));
             return imageList;
         }).map(imageList -> {

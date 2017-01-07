@@ -10,9 +10,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageCache {
-    @Column(unique = true)
+    @Column(indexed = true, unique = true)
+    public String key;
+
+    @Column(indexed = true)
     public String url;
 
-    @Column
+    @Column(indexed = true)
     public String description;
+
+    @Column(indexed = true)
+    public long updated;
 }
