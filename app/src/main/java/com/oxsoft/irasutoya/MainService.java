@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.inputmethodservice.InputMethodService;
 import android.net.Uri;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.v13.view.inputmethod.EditorInfoCompat;
 import android.support.v13.view.inputmethod.InputConnectionCompat;
@@ -47,18 +48,21 @@ import okhttp3.Response;
 
 public class MainService extends InputMethodService {
     private static final int IMAGE_SIZE = 400;
+    private static final long VIBRATION_TIME = 10L;
 
     private interface Action0 {
         void call();
     }
 
     private OrmaDatabase orma;
+    private Vibrator vibrator;
     private CompositeDisposable subscriptions = new CompositeDisposable();
     private Action0 removeOnPreDrawListener = null;
 
     @Override
     public View onCreateInputView() {
         orma = OrmaDatabase.builder(this).build();
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
         View inputView = getLayoutInflater().inflate(R.layout.view_keyboard, null);
         TextView search = (TextView) inputView.findViewById(R.id.search);
@@ -72,6 +76,7 @@ public class MainService extends InputMethodService {
                 TextView textView = (TextView) getLayoutInflater().inflate(R.layout.view_label_text, labels, false);
                 textView.setText(searchQuery.getName());
                 textView.setOnClickListener(v -> {
+                    vibrator.vibrate(VIBRATION_TIME);
                     if (removeOnPreDrawListener != null) removeOnPreDrawListener.call();
                     subscriptions.clear();
                     contents.removeAllViews();
@@ -126,6 +131,7 @@ public class MainService extends InputMethodService {
             subscriptions.add(download(image.getUrl()).subscribe(uri -> {
                 Glide.with(this).load(uri).into(imageView);
                 imageView.setOnClickListener(v -> {
+                    vibrator.vibrate(VIBRATION_TIME);
                     commitPngImage(uri, image.getDescription(), Uri.parse(image.getUrl()));
                     Single.fromCallable(() -> {
                         String key = getFileNameFromUrl(image.getUrl());
