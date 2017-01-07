@@ -44,6 +44,8 @@ import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
 public class MainService extends InputMethodService {
+    private static final int IMAGE_SIZE = 400;
+
     private CompositeSubscription subscriptions = new CompositeSubscription();
     private Action0 removeOnPreDrawListener = null;
 
@@ -149,7 +151,7 @@ public class MainService extends InputMethodService {
                 Response response = new OkHttpClient().newCall(request).execute();
                 InputStream input = response.body().byteStream();
                 OutputStream output = openFileOutput(fileName, MODE_PRIVATE);
-                byte[] buffer = new byte[16777216];
+                byte[] buffer = new byte[65536];
                 int bytesRead;
                 while ((bytesRead = input.read(buffer)) != -1) {
                     output.write(buffer, 0, bytesRead);
@@ -215,7 +217,7 @@ public class MainService extends InputMethodService {
                     final String A = "document.write(bp_thumbnail_resize(\"";
                     final String B = "\",\"";
                     final String C = "\"));";
-                    String imageUrl = script.substring(A.length(), script.indexOf(B)).replace("s72-c", "s180");
+                    String imageUrl = script.substring(A.length(), script.indexOf(B)).replace("s72-c", "s" + IMAGE_SIZE);
                     String imageDesc = script.substring(script.indexOf(B) + B.length(), script.indexOf(C));
                     images[i] = new SearchResult.Image(imageUrl, decode(imageDesc));
                 }
