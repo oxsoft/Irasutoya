@@ -55,10 +55,11 @@ public class MainService extends InputMethodService {
         HorizontalScrollView contentsScrollView = (HorizontalScrollView) inputView.findViewById(R.id.view_keyboard_contents_scroll_view);
         LinearLayout contents = (LinearLayout) inputView.findViewById(R.id.view_keyboard_contents);
         LinearLayout labels = (LinearLayout) inputView.findViewById(R.id.view_keyboard_labels);
-        fetchLabels().subscribe(labelStrings -> {
-            for (String label : labelStrings) {
+
+        getSearchQueries().subscribe(searchQueries -> {
+            for (SearchQuery searchQuery : searchQueries) {
                 TextView textView = (TextView) getLayoutInflater().inflate(R.layout.view_label_text, labels, false);
-                textView.setText(label);
+                textView.setText(searchQuery.getName());
                 textView.setOnClickListener(v -> {
                     if (removeOnPreDrawListener != null) removeOnPreDrawListener.call();
                     subscriptions.clear();
@@ -68,7 +69,8 @@ public class MainService extends InputMethodService {
                         labels.getChildAt(i).setBackgroundColor(Color.TRANSPARENT);
                     }
                     textView.setBackgroundResource(R.drawable.label_background);
-                    subscriptions.add(searchLabel(label).subscribe(searchResult -> drawImages(contents, searchResult), Throwable::printStackTrace));
+                    Single<SearchResult> request = searchQuery.getType() == SearchQuery.TYPE_LATEST ? searchLatest() : searchLabel(searchQuery.getName());
+                    subscriptions.add(request.subscribe(searchResult -> drawImages(contents, searchResult), Throwable::printStackTrace));
                 });
                 labels.addView(textView);
             }
@@ -160,6 +162,17 @@ public class MainService extends InputMethodService {
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
+    private Single<SearchQuery[]> getSearchQueries() {
+        return fetchLabels().map(labels -> {
+            SearchQuery[] searchQueries = new SearchQuery[labels.length + 1];
+            searchQueries[0] = new SearchQuery(SearchQuery.TYPE_LATEST, "新着");
+            for (int i = 0; i < labels.length; i++) {
+                searchQueries[i + 1] = new SearchQuery(SearchQuery.TYPE_LABEL, labels[i]);
+            }
+            return searchQueries;
+        });
+    }
+
     private Single<String[]> fetchLabels() {
         return Single.create((Single.OnSubscribe<String[]>) singleSubscriber -> {
             try {
@@ -179,6 +192,10 @@ public class MainService extends InputMethodService {
 
     private Single<SearchResult> searchQuery(@NonNull String query) {
         return search("http://www.irasutoya.com/search?q=" + query);
+    }
+
+    private Single<SearchResult> searchLatest() {
+        return search("http://www.irasutoya.com/search");
     }
 
     private Single<SearchResult> searchLabel(@NonNull String label) {
