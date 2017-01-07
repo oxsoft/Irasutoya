@@ -32,7 +32,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="136dp"
                 android:orientation="horizontal"
-                android:padding="8dp" />
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp" />
         </HorizontalScrollView>
 
         <HorizontalScrollView
