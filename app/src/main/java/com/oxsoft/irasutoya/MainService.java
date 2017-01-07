@@ -57,13 +57,8 @@ public class MainService extends InputMethodService {
         LinearLayout labels = (LinearLayout) inputView.findViewById(R.id.view_keyboard_labels);
         fetchLabels().subscribe(labelStrings -> {
             for (String label : labelStrings) {
-                TextView textView = new TextView(this);
+                TextView textView = (TextView) getLayoutInflater().inflate(R.layout.view_label_text, labels, false);
                 textView.setText(label);
-                textView.setTextSize(16f);
-                textView.setPadding(dp2px(8), dp2px(8), dp2px(8), dp2px(8));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.rightMargin = dp2px(8);
-                textView.setLayoutParams(lp);
                 textView.setOnClickListener(v -> {
                     if (removeOnPreDrawListener != null) removeOnPreDrawListener.call();
                     subscriptions.clear();
@@ -231,9 +226,5 @@ public class MainService extends InputMethodService {
         }
         matcher.appendTail(sb);
         return sb.toString();
-    }
-
-    private int dp2px(int dp) {
-        return Math.round(getResources().getDisplayMetrics().density * dp);
     }
 }
