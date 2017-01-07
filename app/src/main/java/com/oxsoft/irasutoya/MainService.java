@@ -210,6 +210,12 @@ public class MainService extends InputMethodService {
     }
 
     private Single<String[]> fetchLabels() {
+        if (orma.selectFromLabel().count() > 0) {
+            return orma.selectFromLabel().executeAsObservable().reduce(new ArrayList<String>(), (list, label) -> {
+                list.add(label.label);
+                return list;
+            }).map(list -> list.toArray(new String[list.size()]));
+        }
         return Single.create((SingleOnSubscribe<String[]>) singleSubscriber -> {
             try {
                 Document document = Jsoup.connect("http://www.irasutoya.com").get();
@@ -218,6 +224,7 @@ public class MainService extends InputMethodService {
                 String[] labels = new String[links.size()];
                 for (int i = 0; i < labels.length; i++) {
                     labels[i] = links.get(i).text();
+                    orma.insertIntoLabel(new Label(labels[i]));
                 }
                 singleSubscriber.onSuccess(labels);
             } catch (Exception e) {
