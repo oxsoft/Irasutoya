@@ -171,7 +171,7 @@ public class MainService extends InputMethodService {
                 response.body().close();
                 singleSubscriber.onSuccess(uri);
             } catch (IOException e) {
-                singleSubscriber.onError(e);
+//                singleSubscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -200,7 +200,7 @@ public class MainService extends InputMethodService {
                 }
                 singleSubscriber.onSuccess(labels);
             } catch (Exception e) {
-                singleSubscriber.onError(e);
+//                singleSubscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -248,7 +248,7 @@ public class MainService extends InputMethodService {
                 String next = nextLink != null ? nextLink.attr("href") : null;
                 singleSubscriber.onSuccess(new SearchResult(images, next));
             } catch (IOException e) {
-                singleSubscriber.onError(e);
+//                singleSubscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
