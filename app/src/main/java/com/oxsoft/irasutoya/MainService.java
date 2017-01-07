@@ -34,19 +34,23 @@ import java.io.OutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.reactivex.Single;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import rx.Single;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action0;
-import rx.schedulers.Schedulers;
-import rx.subscriptions.CompositeSubscription;
 
 public class MainService extends InputMethodService {
     private static final int IMAGE_SIZE = 400;
 
-    private CompositeSubscription subscriptions = new CompositeSubscription();
+    private interface Action0 {
+        void call();
+    }
+
+    private CompositeDisposable subscriptions = new CompositeDisposable();
     private Action0 removeOnPreDrawListener = null;
 
     @Override
@@ -145,7 +149,7 @@ public class MainService extends InputMethodService {
         if (file.exists() && file.isFile()) {
             return Single.just(uri);
         }
-        return Single.create((Single.OnSubscribe<Uri>) singleSubscriber -> {
+        return Single.create((SingleOnSubscribe<Uri>) singleSubscriber -> {
             try {
                 Request request = new Request.Builder().url(url).build();
                 Response response = new OkHttpClient().newCall(request).execute();
@@ -176,7 +180,7 @@ public class MainService extends InputMethodService {
     }
 
     private Single<String[]> fetchLabels() {
-        return Single.create((Single.OnSubscribe<String[]>) singleSubscriber -> {
+        return Single.create((SingleOnSubscribe<String[]>) singleSubscriber -> {
             try {
                 Document document = Jsoup.connect("http://www.irasutoya.com").get();
                 Element content = document.getElementsByClass("widget-content list-label-widget-content").first();
@@ -205,7 +209,7 @@ public class MainService extends InputMethodService {
     }
 
     private Single<SearchResult> search(@NonNull String url) {
-        return Single.create((Single.OnSubscribe<SearchResult>) singleSubscriber -> {
+        return Single.create((SingleOnSubscribe<SearchResult>) singleSubscriber -> {
             try {
                 Request request = new Request.Builder().url(url).build();
                 String body = new OkHttpClient().newCall(request).execute().body().string();

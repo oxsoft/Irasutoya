@@ -10,8 +10,8 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.EditText;
 
-import rx.Observable;
-import rx.subjects.BehaviorSubject;
+import io.reactivex.Observable;
+import io.reactivex.subjects.BehaviorSubject;
 
 public class ImageKeyboardSupportEditText extends EditText {
     private BehaviorSubject<Uri> contentUri = BehaviorSubject.create();
@@ -49,10 +49,10 @@ public class ImageKeyboardSupportEditText extends EditText {
     }
 
     public Observable<Uri> getContentUri() {
-        return contentUri.asObservable();
+        return contentUri.hide();
     }
 
     public Observable<CharSequence> getDescription() {
-        return description.asObservable();
+        return description.hide();
     }
 }
