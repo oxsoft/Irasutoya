@@ -1,6 +1,18 @@
 <resources>
     <string name="app_name">いらすとや</string>
     <string name="label">いらすとやキーボード</string>
+    <string name="about">このアプリについて</string>
+    <string name="description">　いらすとやの非公式キーボードです。\n　Image Keyboardをサポートしているテキスト入力欄でのみ、いらすとやの画像を入力することができます。\n　このアプリは内部に画像データを持っているわけではありません。全ての画像の著作権はいらすとやに所属します。</string>
+    <string name="settings">キーボード設定を開く</string>
+    <string name="test_hint">ここでテストできます</string>
+    <string name="site">いらすとやについて</string>
+    <string name="site_url">http://www.irasutoya.com</string>
+    <string name="code">ソースコード</string>
+    <string name="code_url">https://github.com/oxsoft/Irasutoya</string>
+    <string name="other_settings">その他の設定</string>
+    <string name="clear_cache">キャッシュのクリア</string>
+    <string name="clear_cache_done">キャッシュをクリアしました</string>
+    <string name="image_size">画質の設定</string>
     <string name="search_hint">検索</string>
     <string name="todo">実装されてません</string>
     <string name="history">履歴</string>
