@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setTitle(R.string.label);
 
         final ImageKeyboardSupportEditText imageKeyboardSupportEditText = (ImageKeyboardSupportEditText) findViewById(R.id.image_keyboard_support_edit_text);
         final TextView descriptionLabel = (TextView) findViewById(R.id.description_label);
