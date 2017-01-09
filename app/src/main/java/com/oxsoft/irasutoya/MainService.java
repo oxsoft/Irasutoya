@@ -49,7 +49,6 @@ import okhttp3.Response;
 import static android.view.View.GONE;
 
 public class MainService extends InputMethodService {
-    private static final int IMAGE_SIZE = 400;
     private static final long VIBRATION_TIME = 10L;
 
     private interface Action0 {
@@ -58,6 +57,7 @@ public class MainService extends InputMethodService {
 
     private OrmaDatabase orma;
     private Vibrator vibrator;
+    private int imageSize;
     private TextView unsupported;
     private CompositeDisposable subscriptions = new CompositeDisposable();
     private Action0 removeOnPreDrawListener = null;
@@ -66,6 +66,7 @@ public class MainService extends InputMethodService {
     public View onCreateInputView() {
         orma = OrmaDatabase.builder(this).build();
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        imageSize = new Preferences(this).loadImageSize();
 
         View inputView = getLayoutInflater().inflate(R.layout.view_keyboard, null);
         TextView search = (TextView) inputView.findViewById(R.id.search);
@@ -269,7 +270,7 @@ public class MainService extends InputMethodService {
                     final String A = "document.write(bp_thumbnail_resize(\"";
                     final String B = "\",\"";
                     final String C = "\"));";
-                    String imageUrl = script.substring(A.length(), script.indexOf(B)).replace("s72-c", "s" + IMAGE_SIZE);
+                    String imageUrl = script.substring(A.length(), script.indexOf(B)).replace("s72-c", "s" + imageSize);
                     String imageDesc = script.substring(script.indexOf(B) + B.length(), script.indexOf(C));
                     images[i] = new SearchResult.Image(imageUrl, decode(imageDesc));
                 }

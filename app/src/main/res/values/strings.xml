@@ -12,7 +12,11 @@
     <string name="other_settings">その他の設定</string>
     <string name="clear_cache">キャッシュのクリア</string>
     <string name="clear_cache_done">キャッシュをクリアしました</string>
-    <string name="image_size">画質の設定</string>
+    <string name="change_image_size">画質の設定</string>
+    <string name="change_image_size_ok">OK</string>
+    <string name="change_image_size_cancel">キャンセル</string>
+    <string name="current_image_size">画質：%1$dpx</string>
+    <string name="change_image_size_done">画質を%1$dpxに変更しました</string>
     <string name="search_hint">検索</string>
     <string name="todo">実装されてません</string>
     <string name="history">履歴</string>

@@ -104,10 +104,10 @@
                 android:text="@string/clear_cache" />
 
             <Button
-                android:id="@+id/image_size"
+                android:id="@+id/change_image_size"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/image_size" />
+                android:text="@string/change_image_size" />
         </LinearLayout>
     </ScrollView>
 </FrameLayout>
