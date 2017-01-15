@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.v13.view.inputmethod.EditorInfoCompat;
 import android.support.v13.view.inputmethod.InputConnectionCompat;
 import android.support.v13.view.inputmethod.InputContentInfoCompat;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -175,7 +176,7 @@ public class MainService extends InputMethodService {
     private Single<Uri> download(String url) {
         String fileName = getFileNameFromUrl(url);
         File file = getFileStreamPath(fileName);
-        Uri uri = Uri.parse("content://com.oxsoft.irasutoya.FileContentProvider/" + fileName);
+        Uri uri = FileProvider.getUriForFile(this, "com.oxsoft.irasutoya.content", file);
         if (file.exists() && file.isFile()) {
             return Single.just(uri);
         }
